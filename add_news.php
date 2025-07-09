@@ -48,7 +48,7 @@ $categories = getAllCategories();
         }
 
         textarea.form-control {
-            min-height: 120px;
+            min-height: 300px;
             resize: vertical;
         }
 
@@ -137,6 +137,13 @@ $categories = getAllCategories();
             </div>
 
             <div class="form-group">
+                <label for="pdf" class="form-label">ไฟล์ PDF</label>
+                <input type="file" class="form-control" id="pdf" name="pdf" accept=".pdf">
+                <div class="file-info">รองรับไฟล์ PDF ขนาดไม่เกิน 5MB</div>
+                <div class="error-message" id="pdf-error"></div>
+            </div>
+
+            <div class="form-group">
                 <label for="status" class="form-label">สถานะ *</label>
                 <select class="form-select" id="status" name="status" required>
                     <option value="">เลือกสถานะ</option>
@@ -205,6 +212,7 @@ $categories = getAllCategories();
             const category = document.getElementById('category').value;
             const status = document.getElementById('status').value;
             const imageFile = document.getElementById('image').files[0];
+            const pdfFile = document.getElementById('pdf').files[0];
 
             let errors = {};
 
@@ -243,6 +251,17 @@ $categories = getAllCategories();
                     errors.image = 'รองรับเฉพาะไฟล์ JPG, PNG เท่านั้น';
                 } else if (imageFile.size > maxSize) {
                     errors.image = 'ขนาดไฟล์ต้องไม่เกิน 2MB';
+                }
+            }
+
+            // Validate PDF
+            if (pdfFile) {
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (pdfFile.type !== 'application/pdf') {
+                    errors.pdf = 'รองรับเฉพาะไฟล์ PDF เท่านั้น';
+                } else if (pdfFile.size > maxSize) {
+                    errors.pdf = 'ขนาดไฟล์ต้องไม่เกิน 5MB';
                 }
             }
 
@@ -337,6 +356,23 @@ $categories = getAllCategories();
                     imageError.textContent = 'ขนาดไฟล์ต้องไม่เกิน 2MB';
                 } else {
                     imageError.textContent = '';
+                }
+            }
+        });
+
+        document.getElementById('pdf').addEventListener('change', function() {
+            const pdfError = document.getElementById('pdf-error');
+            const file = this.files[0];
+
+            if (file) {
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (file.type !== 'application/pdf') {
+                    pdfError.textContent = 'รองรับเฉพาะไฟล์ PDF เท่านั้น';
+                } else if (file.size > maxSize) {
+                    pdfError.textContent = 'ขนาดไฟล์ต้องไม่เกิน 5MB';
+                } else {
+                    pdfError.textContent = '';
                 }
             }
         });

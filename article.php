@@ -121,6 +121,45 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
             margin-bottom: 20px;
         }
 
+        .attachment-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .attachment-title {
+            color: #04a7e3;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .attachment-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #04a7e3;
+            transition: all 0.3s ease;
+        }
+
+        .attachment-link:hover {
+            background-color: #04a7e3;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0px 3px 10px rgba(4, 167, 227, 0.3);
+        }
+
+        .pdf-icon {
+            font-size: 1.5rem;
+        }
+
         .back-button {
             display: inline-flex;
             align-items: center;
@@ -246,6 +285,22 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
             <div class="article-content">
                 <?php echo nl2br(htmlspecialchars($article['content'])); ?>
             </div>
+
+            <?php if ($article['files']): ?>
+                <div class="attachment-section">
+                    <h4 class="attachment-title">ไฟล์แนบ</h4>
+                    <a href="uploads/files/<?php echo htmlspecialchars($article['files']); ?>"
+                        target="_blank"
+                        class="attachment-link">
+                        <span class="pdf-icon">📄</span>
+                        <div>
+                            <strong>ดาวน์โหลดไฟล์ PDF</strong>
+                            <br>
+                            <small class="text-muted">คลิกเพื่อเปิดหรือดาวน์โหลดไฟล์</small>
+                        </div>
+                    </a>
+                </div>
+            <?php endif; ?>
         </article>
 
         <?php if (!empty($relatedNews)): ?>

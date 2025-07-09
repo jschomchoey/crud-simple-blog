@@ -54,5 +54,5 @@ try {
     $responseCode = 500;
 }
 
-echo json_encode($response, JSON_UNESCAPED_UNICODE);
 http_response_code($responseCode);
+echo json_encode($response, JSON_UNESCAPED_UNICODE);

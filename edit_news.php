@@ -63,7 +63,7 @@ $categories = getAllCategories();
         }
 
         textarea.form-control {
-            min-height: 120px;
+            min-height: 300px;
             resize: vertical;
         }
 
@@ -115,7 +115,7 @@ $categories = getAllCategories();
             margin-top: 10px;
         }
 
-        .remove-image-btn {
+        .remove-file-btn {
             background-color: #dc3545;
             color: white;
             border: none;
@@ -125,8 +125,27 @@ $categories = getAllCategories();
             margin-top: 5px;
         }
 
-        .remove-image-btn:hover {
+        .remove-file-btn:hover {
             background-color: #c82333;
+        }
+
+        .current-pdf {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .current-pdf a {
+            color: #04a7e3;
+            text-decoration: none;
+        }
+
+        .current-pdf a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -181,7 +200,7 @@ $categories = getAllCategories();
                         <img src="uploads/images/<?php echo htmlspecialchars($news['image']); ?>"
                             class="current-image" alt="Current Image" id="current-image">
                         <br>
-                        <button type="button" class="remove-image-btn" onclick="removeCurrentImage()">
+                        <button type="button" class="remove-file-btn" onclick="removeCurrentImage()">
                             ลบรูปภาพปัจจุบัน
                         </button>
                         <input type="hidden" name="remove_image" id="remove_image" value="0">
@@ -190,6 +209,25 @@ $categories = getAllCategories();
                 <input type="file" class="form-control" id="image" name="image" accept="image/jpeg,image/png,image/jpg" style="margin-top: 10px;">
                 <div class="file-info">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 2MB</div>
                 <div class="error-message" id="image-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="pdf" class="form-label">ไฟล์ PDF</label>
+                <?php if ($news['files']): ?>
+                    <div class="current-pdf" id="current-pdf-container">
+                        <div>ไฟล์ PDF ปัจจุบัน:</div>
+                        <a href="uploads/files/<?php echo htmlspecialchars($news['files']); ?>" target="_blank">
+                            📄 ดูไฟล์ PDF
+                        </a>
+                        <button type="button" class="remove-file-btn" onclick="removeCurrentPdf()">
+                            ลบไฟล์ PDF
+                        </button>
+                        <input type="hidden" name="remove_pdf" id="remove_pdf" value="0">
+                    </div>
+                <?php endif; ?>
+                <input type="file" class="form-control" id="pdf" name="pdf" accept=".pdf" style="margin-top: 10px;">
+                <div class="file-info">รองรับไฟล์ PDF ขนาดไม่เกิน 5MB</div>
+                <div class="error-message" id="pdf-error"></div>
             </div>
 
             <div class="form-group">
@@ -262,12 +300,21 @@ $categories = getAllCategories();
             removeImageInput.value = '1';
         }
 
+        function removeCurrentPdf() {
+            const currentPdfContainer = document.getElementById('current-pdf-container');
+            const removePdfInput = document.getElementById('remove_pdf');
+
+            currentPdfContainer.style.display = 'none';
+            removePdfInput.value = '1';
+        }
+
         function validateForm() {
             const title = document.getElementById('title').value.trim();
             const content = document.getElementById('content').value.trim();
             const category = document.getElementById('category').value;
             const status = document.getElementById('status').value;
             const imageFile = document.getElementById('image').files[0];
+            const pdfFile = document.getElementById('pdf').files[0];
 
             let errors = {};
 
@@ -306,6 +353,17 @@ $categories = getAllCategories();
                     errors.image = 'รองรับเฉพาะไฟล์ JPG, PNG เท่านั้น';
                 } else if (imageFile.size > maxSize) {
                     errors.image = 'ขนาดไฟล์ต้องไม่เกิน 2MB';
+                }
+            }
+
+            // Validate PDF
+            if (pdfFile) {
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (pdfFile.type !== 'application/pdf') {
+                    errors.pdf = 'รองรับเฉพาะไฟล์ PDF เท่านั้น';
+                } else if (pdfFile.size > maxSize) {
+                    errors.pdf = 'ขนาดไฟล์ต้องไม่เกิน 5MB';
                 }
             }
 
@@ -393,6 +451,23 @@ $categories = getAllCategories();
                     imageError.textContent = 'ขนาดไฟล์ต้องไม่เกิน 2MB';
                 } else {
                     imageError.textContent = '';
+                }
+            }
+        });
+
+        document.getElementById('pdf').addEventListener('change', function() {
+            const pdfError = document.getElementById('pdf-error');
+            const file = this.files[0];
+
+            if (file) {
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (file.type !== 'application/pdf') {
+                    pdfError.textContent = 'รองรับเฉพาะไฟล์ PDF เท่านั้น';
+                } else if (file.size > maxSize) {
+                    pdfError.textContent = 'ขนาดไฟล์ต้องไม่เกิน 5MB';
+                } else {
+                    pdfError.textContent = '';
                 }
             }
         });

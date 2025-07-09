@@ -16,6 +16,8 @@ $news = getNews($category_filter, $search_filter);
     <title>All Blog</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/scss/main.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
@@ -46,40 +48,52 @@ $news = getNews($category_filter, $search_filter);
                 <button type="button" class="clear-filter" id="clear-filter" onclick="clearFilters()" style="display: none;">ล้างตัวกรอง</button>
             </form>
         </aside>
-        <article class="article" id="article-container">
-            <?php
-            if (empty($news)) {
-                echo '<p>ไม่พบข่าวที่ตรงกับเงื่อนไขการค้นหา</p>';
-            } else {
-                foreach ($news as $row) {
-                    $slug = $row['slug']; // ใช้ slug จากฐานข้อมูล
-                    $article_url = "article.php?slug=" . urlencode($slug);
-            ?>
+        <div class="article-section">
+            <!-- Layout Toggle Buttons -->
+            <div class="layout-toggle">
+                <button class="layout-btn active" id="row-layout" onclick="switchLayout('row')" title="แสดงแบบแถว">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="layout-btn" id="grid-layout" onclick="switchLayout('grid')" title="แสดงแบบกริด">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
 
-                    <div class="article-wrapper d-flex justify-content-start">
-                        <div class="article-image-container">
-                            <img class="article-image" src="uploads/images/<?php echo htmlspecialchars($row['image']); ?>" alt="">
-                        </div>
+            <article class="article" id="article-container">
+                <?php
+                if (empty($news)) {
+                    echo '<p>ไม่พบข่าวที่ตรงกับเงื่อนไขการค้นหา</p>';
+                } else {
+                    foreach ($news as $row) {
+                        $slug = $row['slug']; // ใช้ slug จากฐานข้อมูล
+                        $article_url = "article.php?slug=" . urlencode($slug);
+                ?>
 
-                        <div class="article-content d-flex flex-column justify-content-between">
-                            <div>
-                                <a href="<?php echo $article_url; ?>" class="article-heading" style="text-decoration: none;">
-                                    <h2><?php echo htmlspecialchars($row['title']); ?></h2>
-                                </a>
-                                <p><?php echo htmlspecialchars(substr($row['content'], 0, 255)) . '...'; ?></p>
+                        <div class="article-wrapper d-flex justify-content-start">
+                            <div class="article-image-container">
+                                <img class="article-image" src="uploads/images/<?php echo htmlspecialchars($row['image']); ?>" alt="">
                             </div>
-                            <div class="d-flex">
-                                <p><strong><?php echo date("d M Y", strtotime($row['created_at'])); ?></strong></p>
-                                <p class="ms-2"> - </p>
-                                <p class="ms-2"><strong><?php echo htmlspecialchars($row['category_name']); ?></strong></p>
+
+                            <div class="article-content d-flex flex-column justify-content-between">
+                                <div>
+                                    <a href="<?php echo $article_url; ?>" class="article-heading" style="text-decoration: none;">
+                                        <h2><?php echo htmlspecialchars($row['title']); ?></h2>
+                                    </a>
+                                    <p><?php echo htmlspecialchars(substr($row['content'], 0, 255)) . '...'; ?></p>
+                                </div>
+                                <div class="d-flex">
+                                    <p><strong><?php echo date("d M Y", strtotime($row['created_at'])); ?></strong></p>
+                                    <p class="ms-2"> - </p>
+                                    <p class="ms-2"><strong><?php echo htmlspecialchars($row['category_name']); ?></strong></p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-            <?php
+                <?php
+                    }
                 }
-            }
-            ?>
-        </article>
+                ?>
+            </article>
+        </div>
     </div>
 
     <!-- Loading indicator -->
@@ -90,12 +104,13 @@ $news = getNews($category_filter, $search_filter);
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
-    <script src="./js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <script src="js/script.js"></script>
 
     <script>
         let currentCategory = '<?php echo $category_filter; ?>';
         let currentSearch = '<?php echo $search_filter; ?>';
+        let currentLayout = 'row'; // Default layout
 
         // แสดงปุ่มล้างตัวกรองหากมีการกรอง
         function updateClearButton() {
@@ -105,6 +120,31 @@ $news = getNews($category_filter, $search_filter);
             } else {
                 clearButton.style.display = 'none';
             }
+        }
+
+        // ฟังก์ชันสลับ layout
+        function switchLayout(layout) {
+            currentLayout = layout;
+            const articleContainer = document.getElementById('article-container');
+            const rowBtn = document.getElementById('row-layout');
+            const gridBtn = document.getElementById('grid-layout');
+
+            // Remove active class from all buttons
+            rowBtn.classList.remove('active');
+            gridBtn.classList.remove('active');
+
+            if (layout === 'row') {
+                articleContainer.classList.remove('grid-layout');
+                articleContainer.classList.add('row-layout');
+                rowBtn.classList.add('active');
+            } else {
+                articleContainer.classList.remove('row-layout');
+                articleContainer.classList.add('grid-layout');
+                gridBtn.classList.add('active');
+            }
+
+            // Save layout preference
+            localStorage.setItem('preferred_layout', layout);
         }
 
         // โหลดข่าวด้วย Ajax แบบ FormData
@@ -128,6 +168,9 @@ $news = getNews($category_filter, $search_filter);
             }).done(function(result) {
                 if (result.success) {
                     articleContainer.innerHTML = result.html;
+
+                    // Apply current layout after loading new content
+                    switchLayout(currentLayout);
 
                     // อัปเดต URL โดยไม่รีเฟรช
                     const newUrl = new URL(window.location);
@@ -155,19 +198,17 @@ $news = getNews($category_filter, $search_filter);
             });
         }
 
-        // ฟังก์ชันกรองตามหมวดหมู่
         function filterByCategory(categoryId) {
             loadNews(categoryId, currentSearch);
         }
 
-        // ฟังก์ชันค้นหา
+
         function searchNews(event) {
             event.preventDefault();
             const searchValue = document.getElementById('search-input').value;
             loadNews(currentCategory, searchValue);
         }
 
-        // ฟังก์ชันล้างตัวกรอง
         function clearFilters() {
             document.getElementById('form-select').value = '';
             document.getElementById('search-input').value = '';
@@ -177,6 +218,12 @@ $news = getNews($category_filter, $search_filter);
         // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
         document.addEventListener('DOMContentLoaded', function() {
             updateClearButton();
+
+            // Load saved layout preference
+            const savedLayout = localStorage.getItem('preferred_layout');
+            if (savedLayout) {
+                switchLayout(savedLayout);
+            }
         });
 
         // Handle browser back/forward buttons

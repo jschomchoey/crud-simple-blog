@@ -8,6 +8,8 @@ function getNews($category_filter = '', $search_filter = '')
 
     $query = "SELECT news.*, categories.name AS category_name FROM news JOIN categories ON news.category_id = categories.id WHERE news.status = 'active'";
 
+
+
     $conditions = [];
     $params = [];
     $types = '';
@@ -34,6 +36,8 @@ function getNews($category_filter = '', $search_filter = '')
     }
 
     $query .= " ORDER BY news.created_at DESC";
+
+    // echo $query;
 
     $stmt = $mysqli->prepare($query);
 
@@ -94,7 +98,7 @@ function getAllCategories()
     return $categories;
 }
 
-function addNews($title, $content, $category_id, $image, $pdf, $status)
+function addNews($title, $content, $category_id, $image, $files, $status)
 {
     global $mysqli;
 
@@ -102,21 +106,21 @@ function addNews($title, $content, $category_id, $image, $pdf, $status)
     $slug = strtolower(str_replace(' ', '-', $title));
 
     // add news to database
-    $stmt = $mysqli->prepare("INSERT INTO news (title, content, category_id, image, pdf, status, slug, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssissss", $title, $content, $category_id, $image, $pdf, $status, $slug);
+    $stmt = $mysqli->prepare("INSERT INTO news (title, content, category_id, image, files, status, slug, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("ssissss", $title, $content, $category_id, $image, $files, $status, $slug);
     return $stmt->execute();
 }
 
 // update news
-function updateNews($id, $title, $content, $category_id, $image, $pdf, $status)
+function updateNews($id, $title, $content, $category_id, $image, $files, $status)
 {
     global $mysqli;
 
     // create slug
     $slug = strtolower(str_replace(' ', '-', $title));
 
-    $stmt = $mysqli->prepare("UPDATE news SET title = ?, content = ?, category_id = ?, image = ?, pdf = ?, status = ?, slug = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->bind_param("ssissssi", $title, $content, $category_id, $image, $pdf, $status, $slug, $id);
+    $stmt = $mysqli->prepare("UPDATE news SET title = ?, content = ?, category_id = ?, image = ?, files = ?, status = ?, slug = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->bind_param("ssissssi", $title, $content, $category_id, $image, $files, $status, $slug, $id);
     return $stmt->execute();
 }
 
