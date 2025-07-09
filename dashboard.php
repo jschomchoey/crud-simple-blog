@@ -301,7 +301,7 @@ $categories = getAllCategories();
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <strong><?php echo htmlspecialchars($row['title']); ?></strong>
+                                        <?php echo htmlspecialchars($row['title']); ?>
                                         <br>
                                         <small class="text-muted">
                                             <?php echo htmlspecialchars(substr($row['content'], 0, 100)); ?>...
@@ -320,8 +320,9 @@ $categories = getAllCategories();
                                     <td><?php echo date("d/m/Y H:i", strtotime($row['created_at'])); ?></td>
                                     <td>
                                         <div class="action-buttons">
+
                                             <a href="edit_news.php?id=<?php echo $row['id']; ?>"
-                                                class="btn btn-primary btn-sm">แก้ไขกด</a>
+                                                class="btn btn-primary btn-sm">แก้ไข</a>
                                             <button class="btn btn-danger btn-sm"
                                                 onclick="deleteNews(<?php echo $row['id']; ?>)">ลบ</button>
                                         </div>
@@ -520,7 +521,7 @@ $categories = getAllCategories();
                             }
                         </td>
                         <td>
-                            <strong>${row.title}</strong>
+                           ${row.title}
                             <br>
                             <small class="text-muted">
                                 ${row.content.substring(0, 100)}...

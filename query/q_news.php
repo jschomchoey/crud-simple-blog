@@ -8,8 +8,6 @@ function getNews($category_filter = '', $search_filter = '')
 
     $query = "SELECT news.*, categories.name AS category_name FROM news JOIN categories ON news.category_id = categories.id WHERE news.status = 'active'";
 
-
-
     $conditions = [];
     $params = [];
     $types = '';
