@@ -368,7 +368,7 @@ $totalPages = ceil($totalNews / $limit);
                 </div>
             </div>
 
-            <article class="article" id="article-container">
+            <article class="article row-layout" id="article-container">
                 <?php
                 if (empty($news)) {
                     echo '<p>ไม่พบข่าวที่ตรงกับเงื่อนไขการค้นหา</p>';
