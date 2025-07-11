@@ -67,7 +67,7 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
         .article-title {
             color: #04a7e3;
             font-size: 2.5rem;
-            font-weight: 700;
+            font-weight: 600;
             line-height: 1.2;
             margin-bottom: 15px;
         }

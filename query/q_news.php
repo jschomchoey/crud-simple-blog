@@ -156,7 +156,7 @@ function getNewsBySlugAndIncrementViews($slug)
     // เพิ่มยอดวิวถ้าพบข่าว
     if ($article) {
         incrementNewsViews($article['id']);
-        $article['views'] = $article['views'] + 1; // อัปเดตยอดวิวในข้อมูลที่ส่งกลับ
+        $article['views'] = $article['views'] + 1; // อัปเดตยอดวิว
     }
 
     return $article;
