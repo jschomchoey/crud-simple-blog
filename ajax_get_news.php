@@ -7,11 +7,12 @@ try {
     $category_filter = isset($_POST['category']) ? $_POST['category'] : '';
     $search_filter = isset($_POST['search']) ? $_POST['search'] : '';
     $page = isset($_POST['page']) ? max(1, intval($_POST['page'])) : 1;
+    $sort = isset($_POST['sort']) ? $_POST['sort'] : 'date_desc';
     $limit = 5;
     $offset = ($page - 1) * $limit;
 
-    // ฟังก์ชันดึงข่าวแบบ pagination พร้อมการเรียงตามการปักหมุด
-    function getNewsWithPagination($category_filter = '', $search_filter = '', $limit = 5, $offset = 0)
+    // ฟังก์ชันดึงข่าวแบบ pagination พร้อมการเรียงตามการปักหมุดและ sorting
+    function getNewsWithPagination($category_filter = '', $search_filter = '', $limit = 5, $offset = 0, $sort = 'date_desc')
     {
         global $mysqli;
 
@@ -42,8 +43,27 @@ try {
             $query .= " AND " . implode(' AND ', $conditions);
         }
 
-        // แก้ไขการเรียงลำดับ: ปักหมุดขึ้นก่อน จากนั้นเรียงตามวันใหม่ไปเก่า
-        $query .= " ORDER BY news.pin DESC, news.created_at DESC LIMIT ? OFFSET ?";
+        // แก้ไขการเรียงลำดับ: ปักหมุดขึ้นก่อน จากนั้นเรียงตาม sort parameter
+        $orderBy = "news.pin DESC";
+
+        switch ($sort) {
+            case 'date_desc':
+                $orderBy .= ", news.created_at DESC";
+                break;
+            case 'date_asc':
+                $orderBy .= ", news.created_at ASC";
+                break;
+            case 'views_desc':
+                $orderBy .= ", news.views DESC";
+                break;
+            case 'views_asc':
+                $orderBy .= ", news.views ASC";
+                break;
+            default:
+                $orderBy .= ", news.created_at DESC";
+        }
+
+        $query .= " ORDER BY " . $orderBy . " LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
         $types .= 'ii';
@@ -110,7 +130,7 @@ try {
         return $row['total'];
     }
 
-    $news = getNewsWithPagination($category_filter, $search_filter, $limit, $offset);
+    $news = getNewsWithPagination($category_filter, $search_filter, $limit, $offset, $sort);
     $totalNews = countNews($category_filter, $search_filter);
     $totalPages = ceil($totalNews / $limit);
 
@@ -145,9 +165,11 @@ try {
             $html .= '<p>' . htmlspecialchars(substr($row['content'], 0, 255)) . '...</p>';
             $html .= '</div>';
             $html .= '<div class="d-flex">';
-            $html .= '<p><strong>' . date("d M Y", strtotime($row['created_at'])) . '</strong></p>';
+            $html .= '<p>' . date("d M Y", strtotime($row['created_at'])) . '</p>';
             $html .= '<p class="ms-2"> - </p>';
-            $html .= '<p class="ms-2"><strong>' . htmlspecialchars($row['category_name']) . '</strong></p>';
+            $html .= '<p class="ms-2">' . htmlspecialchars($row['category_name']) . '</p>';
+            $html .= '<p class="ms-2"> - </p>';
+            $html .= '<p class="ms-2 views-count"><i class="fas fa-eye"></i> ' . number_format($row['views']) . '</p>';
             $html .= '</div>';
             $html .= '</div>';
             $html .= '</div>';
@@ -161,7 +183,8 @@ try {
         'count' => count($news),
         'totalNews' => $totalNews,
         'totalPages' => max(1, $totalPages),
-        'currentPage' => $page
+        'currentPage' => $page,
+        'sort' => $sort
     ];
     $responseCode = 200;
 } catch (Exception $e) {

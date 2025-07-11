@@ -9,20 +9,8 @@ if (!isset($_GET['slug']) || empty($_GET['slug'])) {
 
 $slug = $_GET['slug'];
 
-// ดึงข่าวจาก slug
-function getNewsBySlug($slug)
-{
-    global $mysqli;
-
-    $stmt = $mysqli->prepare("SELECT news.*, categories.name AS category_name FROM news JOIN categories ON news.category_id = categories.id WHERE news.slug = ? AND news.status = 'active'");
-    $stmt->bind_param("s", $slug);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    return $result->fetch_assoc();
-}
-
-$article = getNewsBySlug($slug);
+// ดึงข่าวจาก slug และเพิ่มยอดวิว
+$article = getNewsBySlugAndIncrementViews($slug);
 
 // ถ้าไม่พบข่าวหรือข่าวไม่ active ให้กลับไปหน้าหลัก
 if (!$article) {
@@ -99,6 +87,18 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
             padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.9rem;
+        }
+
+        .views-count {
+            color: #6c757d;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .views-count i {
+            font-size: 0.8rem;
         }
 
         .article-image {
@@ -268,10 +268,14 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
             <header class="article-header">
                 <h1 class="article-title"><?php echo htmlspecialchars($article['title']); ?></h1>
                 <div class="article-meta">
-                    <span><strong>วันที่:</strong> <?php echo date("d F Y", strtotime($article['created_at'])); ?></span>
+                    <span>วันที่: <?php echo date("d F Y", strtotime($article['created_at'])); ?></span>
                     <span class="badge"><?php echo htmlspecialchars($article['category_name']); ?></span>
+                    <span class="views-count">
+                        <i class="fas fa-eye"></i>
+                        <?php echo number_format($article['views']); ?> ครั้ง
+                    </span>
                     <?php if ($article['updated_at']): ?>
-                        <span><strong>แก้ไขล่าสุด:</strong> <?php echo date("d F Y", strtotime($article['updated_at'])); ?></span>
+                        <span>แก้ไขล่าสุด: <?php echo date("d F Y", strtotime($article['updated_at'])); ?></span>
                     <?php endif; ?>
                 </div>
             </header>
@@ -294,7 +298,7 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
                         class="attachment-link">
                         <span class="pdf-icon">📄</span>
                         <div>
-                            <strong>ดาวน์โหลดไฟล์ PDF</strong>
+                            ดาวน์โหลดไฟล์ PDF
                             <br>
                             <small class="text-muted">คลิกเพื่อเปิดหรือดาวน์โหลดไฟล์</small>
                         </div>
@@ -318,7 +322,8 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
                                 <p><?php echo htmlspecialchars(substr($related['content'], 0, 150)) . '...'; ?></p>
                                 <div class="meta">
                                     <?php echo date("d M Y", strtotime($related['created_at'])); ?> |
-                                    <?php echo htmlspecialchars($related['category_name']); ?>
+                                    <?php echo htmlspecialchars($related['category_name']); ?> |
+                                    <i class="fas fa-eye"></i> <?php echo number_format($related['views']); ?>
                                 </div>
                             </div>
                         </div>
@@ -329,6 +334,8 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 
     <script>
         // เพิ่ม smooth scroll สำหรับลิงค์ภายใน

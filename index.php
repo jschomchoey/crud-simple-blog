@@ -4,11 +4,12 @@ include './query/q_news.php';
 $category_filter = isset($_GET['category']) ? $_GET['category'] : '';
 $search_filter = isset($_GET['search']) ? $_GET['search'] : '';
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'date_desc';
 $limit = 5;
 $offset = ($page - 1) * $limit;
 
-// แก้ไขฟังก์ชัน getNews เพื่อรองรับ pagination และการเรียงตามการปักหมุด
-function getNewsWithPagination($category_filter = '', $search_filter = '', $limit = 5, $offset = 0)
+// แก้ไขฟังก์ชัน getNews เพื่อรองรับ pagination และการเรียงตามการปักหมุดและ sorting
+function getNewsWithPagination($category_filter = '', $search_filter = '', $limit = 5, $offset = 0, $sort = 'date_desc')
 {
     global $mysqli;
 
@@ -39,8 +40,27 @@ function getNewsWithPagination($category_filter = '', $search_filter = '', $limi
         $query .= " AND " . implode(' AND ', $conditions);
     }
 
-    // แก้ไขการเรียงลำดับ: ปักหมุดขึ้นก่อน จากนั้นเรียงตามวันใหม่ไปเก่า
-    $query .= " ORDER BY news.pin DESC, news.created_at DESC LIMIT ? OFFSET ?";
+    // แก้ไขการเรียงลำดับ: ปักหมุดขึ้นก่อน จากนั้นเรียงตาม sort parameter
+    $orderBy = "news.pin DESC";
+
+    switch ($sort) {
+        case 'date_desc':
+            $orderBy .= ", news.created_at DESC";
+            break;
+        case 'date_asc':
+            $orderBy .= ", news.created_at ASC";
+            break;
+        case 'views_desc':
+            $orderBy .= ", news.views DESC";
+            break;
+        case 'views_asc':
+            $orderBy .= ", news.views ASC";
+            break;
+        default:
+            $orderBy .= ", news.created_at DESC";
+    }
+
+    $query .= " ORDER BY " . $orderBy . " LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
     $types .= 'ii';
@@ -107,7 +127,7 @@ function countNews($category_filter = '', $search_filter = '')
     return $row['total'];
 }
 
-$news = getNewsWithPagination($category_filter, $search_filter, $limit, $offset);
+$news = getNewsWithPagination($category_filter, $search_filter, $limit, $offset, $sort);
 $totalNews = countNews($category_filter, $search_filter);
 $totalPages = ceil($totalNews / $limit);
 
@@ -170,6 +190,76 @@ $totalPages = ceil($totalNews / $limit);
         .grid-layout .pinned-badge {
             top: -5px;
             right: 10px;
+        }
+
+        /* Style สำหรับแสดงยอดวิว */
+        .views-count {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .views-count i {
+            margin-right: 3px;
+        }
+
+        /* Style สำหรับ sort dropdown */
+        .sort-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .sort-dropdown .dropdown-toggle {
+            background-color: #ffffff;
+            border: 2px solid #04a7e3;
+            color: #04a7e3;
+            border-radius: 15px;
+            padding: 10px 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-dropdown .dropdown-toggle:hover {
+            background-color: #f8f9fa;
+        }
+
+        .sort-dropdown .dropdown-toggle::after {
+            border: none;
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-left: 5px;
+        }
+
+        .sort-dropdown .dropdown-menu {
+            border: 1px solid #04a7e3;
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(4, 167, 227, 0.2);
+            padding: 5px 0;
+        }
+
+        .sort-dropdown .dropdown-item {
+            padding: 10px 15px;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .sort-dropdown .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #04a7e3;
+        }
+
+        .sort-dropdown .dropdown-item.active {
+            background-color: #04a7e3;
+            color: white;
+        }
+
+        .sort-dropdown .dropdown-item i {
+            margin-right: 8px;
+            width: 16px;
         }
     </style>
 </head>
@@ -236,6 +326,46 @@ $totalPages = ceil($totalNews / $limit);
                 <div class="pagination-info" id="pagination-info">
                     หน้า <?php echo $page; ?> จาก <?php echo max(1, $totalPages); ?> (<?php echo $totalNews; ?> รายการ)
                 </div>
+
+                <div class="sort-dropdown dropdown">
+                    <button class="dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-sort" id="sort-icon"></i>
+                        <span id="sort-text">
+                            <?php
+                            switch ($sort) {
+                                case 'date_desc':
+                                    echo 'วันที่ใหม่ไปเก่า';
+                                    break;
+                                case 'date_asc':
+                                    echo 'วันที่เก่าไปใหม่';
+                                    break;
+                                case 'views_desc':
+                                    echo 'ยอดวิวเยอะไปน้อย';
+                                    break;
+                                case 'views_asc':
+                                    echo 'ยอดวิวน้อยไปเยอะ';
+                                    break;
+                                default:
+                                    echo 'วันที่ใหม่ไปเก่า';
+                            }
+                            ?>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                        <li><a class="dropdown-item <?php echo ($sort == 'date_desc') ? 'active' : ''; ?>" href="#" onclick="event.preventDefault(); sortNews('date_desc');">
+                                <i class="fas fa-calendar-alt"></i>วันที่ใหม่ไปเก่า
+                            </a></li>
+                        <li><a class="dropdown-item <?php echo ($sort == 'date_asc') ? 'active' : ''; ?>" href="#" onclick="event.preventDefault(); sortNews('date_asc');">
+                                <i class="fas fa-calendar-alt"></i>วันที่เก่าไปใหม่
+                            </a></li>
+                        <li><a class="dropdown-item <?php echo ($sort == 'views_desc') ? 'active' : ''; ?>" href="#" onclick="event.preventDefault(); sortNews('views_desc');">
+                                <i class="fas fa-eye"></i>ยอดวิวเยอะไปน้อย
+                            </a></li>
+                        <li><a class="dropdown-item <?php echo ($sort == 'views_asc') ? 'active' : ''; ?>" href="#" onclick="event.preventDefault(); sortNews('views_asc');">
+                                <i class="fas fa-eye"></i>ยอดวิวน้อยไปเยอะ
+                            </a></li>
+                    </ul>
+                </div>
             </div>
 
             <article class="article" id="article-container">
@@ -264,14 +394,16 @@ $totalPages = ceil($totalNews / $limit);
                             <div class="article-content d-flex flex-column justify-content-between">
                                 <div>
                                     <a href="<?php echo $article_url; ?>" class="article-heading" style="text-decoration: none;">
-                                        <h2><?php echo htmlspecialchars(string: $row['title']); ?></h2>
+                                        <h2><?php echo htmlspecialchars($row['title']); ?></h2>
                                     </a>
-                                    <p><?php echo htmlspecialchars(string: substr(string: $row['content'], offset: 0, length: 255)) . '...'; ?></p>
+                                    <p><?php echo htmlspecialchars(substr($row['content'], 0, 255)) . '...'; ?></p>
                                 </div>
                                 <div class="d-flex">
-                                    <p><?php echo date(format: "d M Y", timestamp: strtotime(datetime: $row['created_at'])); ?></p>
+                                    <p><?php echo date("d M Y", strtotime($row['created_at'])); ?></p>
                                     <p class="ms-2"> - </p>
-                                    <p class="ms-2"><?php echo htmlspecialchars(string: $row['category_name']); ?></p>
+                                    <p class="ms-2"><?php echo htmlspecialchars($row['category_name']); ?></p>
+                                    <p class="ms-2"> - </p>
+                                    <p class="ms-2 views-count"><i class="fas fa-eye"></i> <?php echo number_format($row['views']); ?></p>
                                 </div>
                             </div>
                         </div>
@@ -299,6 +431,7 @@ $totalPages = ceil($totalNews / $limit);
         let currentSearch = '<?php echo $search_filter; ?>';
         let currentPage = <?php echo $page; ?>;
         let currentLayout = 'row'; // Default layout
+        let currentSort = '<?php echo $sort; ?>'; // Current sort
 
         // แสดงปุ่มล้างตัวกรองหากมีการกรอง
         function updateClearButton() {
@@ -335,15 +468,57 @@ $totalPages = ceil($totalNews / $limit);
             localStorage.setItem('preferred_layout', layout);
         }
 
+        // ฟังก์ชันสลับ sort
+        function sortNews(sortType) {
+            // ปิด dropdown
+            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('sortDropdown'));
+            if (dropdown) {
+                dropdown.hide();
+            }
+
+            currentSort = sortType;
+
+            // อัปเดต UI ของ dropdown
+            const sortText = document.getElementById('sort-text');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+            // ลบ active class จากทุกรายการ
+            dropdownItems.forEach(item => item.classList.remove('active'));
+
+            // อัปเดตข้อความและเพิ่ม active class
+            switch (sortType) {
+                case 'date_desc':
+                    sortText.textContent = 'วันที่ใหม่ไปเก่า';
+                    dropdownItems[0].classList.add('active');
+                    break;
+                case 'date_asc':
+                    sortText.textContent = 'วันที่เก่าไปใหม่';
+                    dropdownItems[1].classList.add('active');
+                    break;
+                case 'views_desc':
+                    sortText.textContent = 'ยอดวิวเยอะไปน้อย';
+                    dropdownItems[2].classList.add('active');
+                    break;
+                case 'views_asc':
+                    sortText.textContent = 'ยอดวิวน้อยไปเยอะ';
+                    dropdownItems[3].classList.add('active');
+                    break;
+            }
+
+            // Reset to page 1 when sorting
+            currentPage = 1;
+            loadNews(currentCategory, currentSearch, 1, currentSort);
+        }
+
         // ฟังก์ชันไปยังหน้าที่ระบุ
         function goToPage(page) {
             if (page < 1) return;
             currentPage = page;
-            loadNews(currentCategory, currentSearch, page);
+            loadNews(currentCategory, currentSearch, page, currentSort);
         }
 
         // โหลดข่าวด้วย Ajax แบบ FormData
-        function loadNews(category = '', search = '', page = 1) {
+        function loadNews(category = '', search = '', page = 1, sort = 'date_desc') {
             const loading = document.getElementById('loading');
             const articleContainer = document.getElementById('article-container');
 
@@ -353,6 +528,7 @@ $totalPages = ceil($totalNews / $limit);
             formData.append('category', category);
             formData.append('search', search);
             formData.append('page', page);
+            formData.append('sort', sort);
 
             $.ajax({
                 type: 'POST',
@@ -377,10 +553,12 @@ $totalPages = ceil($totalNews / $limit);
                     newUrl.searchParams.delete('category');
                     newUrl.searchParams.delete('search');
                     newUrl.searchParams.delete('page');
+                    newUrl.searchParams.delete('sort');
 
                     if (category) newUrl.searchParams.set('category', category);
                     if (search) newUrl.searchParams.set('search', search);
                     if (page > 1) newUrl.searchParams.set('page', page);
+                    if (sort !== 'date_desc') newUrl.searchParams.set('sort', sort);
 
                     window.history.pushState({}, '', newUrl);
 
@@ -388,6 +566,7 @@ $totalPages = ceil($totalNews / $limit);
                     currentCategory = category;
                     currentSearch = search;
                     currentPage = page;
+                    currentSort = sort;
 
                     updateClearButton();
                 } else {
@@ -437,21 +616,21 @@ $totalPages = ceil($totalNews / $limit);
 
         function filterByCategory(categoryId) {
             currentPage = 1; // รีเซ็ตไปหน้า 1 เมื่อกรอง
-            loadNews(categoryId, currentSearch, 1);
+            loadNews(categoryId, currentSearch, 1, currentSort);
         }
 
         function searchNews(event) {
             event.preventDefault();
             const searchValue = document.getElementById('search-input').value;
             currentPage = 1; // รีเซ็ตไปหน้า 1 เมื่อค้นหา
-            loadNews(currentCategory, searchValue, 1);
+            loadNews(currentCategory, searchValue, 1, currentSort);
         }
 
         function clearFilters() {
             document.getElementById('form-select').value = '';
             document.getElementById('search-input').value = '';
             currentPage = 1;
-            loadNews('', '', 1);
+            loadNews('', '', 1, currentSort);
         }
 
         // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
@@ -471,11 +650,37 @@ $totalPages = ceil($totalNews / $limit);
             const category = urlParams.get('category') || '';
             const search = urlParams.get('search') || '';
             const page = parseInt(urlParams.get('page')) || 1;
+            const sort = urlParams.get('sort') || 'date_desc';
 
             document.getElementById('form-select').value = category;
             document.getElementById('search-input').value = search;
 
-            loadNews(category, search, page);
+            // Update sort dropdown text and active state
+            const sortText = document.getElementById('sort-text');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+            dropdownItems.forEach(item => item.classList.remove('active'));
+
+            switch (sort) {
+                case 'date_desc':
+                    sortText.textContent = 'วันที่ใหม่ไปเก่า';
+                    dropdownItems[0].classList.add('active');
+                    break;
+                case 'date_asc':
+                    sortText.textContent = 'วันที่เก่าไปใหม่';
+                    dropdownItems[1].classList.add('active');
+                    break;
+                case 'views_desc':
+                    sortText.textContent = 'ยอดวิวเยอะไปน้อย';
+                    dropdownItems[2].classList.add('active');
+                    break;
+                case 'views_asc':
+                    sortText.textContent = 'ยอดวิวน้อยไปเยอะ';
+                    dropdownItems[3].classList.add('active');
+                    break;
+            }
+
+            loadNews(category, search, page, sort);
         });
     </script>
 </body>

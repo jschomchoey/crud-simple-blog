@@ -104,7 +104,7 @@ function addNews($title, $content, $category_id, $image, $files, $status)
     $slug = strtolower(str_replace(' ', '-', $title));
 
     // add news to database
-    $stmt = $mysqli->prepare("INSERT INTO news (title, content, category_id, image, files, status, slug, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt = $mysqli->prepare("INSERT INTO news (title, content, category_id, image, files, status, slug, views, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())");
     $stmt->bind_param("ssissss", $title, $content, $category_id, $image, $files, $status, $slug);
     return $stmt->execute();
 }
@@ -130,4 +130,34 @@ function deleteNews($id)
     $stmt = $mysqli->prepare("DELETE FROM news WHERE id = ?");
     $stmt->bind_param("i", $id);
     return $stmt->execute();
+}
+
+// เพิ่มฟังก์ชันการนับยอดวิว
+function incrementNewsViews($id)
+{
+    global $mysqli;
+
+    $stmt = $mysqli->prepare("UPDATE news SET views = views + 1 WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    return $stmt->execute();
+}
+
+// get single news by slug and increment views
+function getNewsBySlugAndIncrementViews($slug)
+{
+    global $mysqli;
+
+    $stmt = $mysqli->prepare("SELECT news.*, categories.name AS category_name FROM news JOIN categories ON news.category_id = categories.id WHERE news.slug = ? AND news.status = 'active'");
+    $stmt->bind_param("s", $slug);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $article = $result->fetch_assoc();
+
+    // เพิ่มยอดวิวถ้าพบข่าว
+    if ($article) {
+        incrementNewsViews($article['id']);
+        $article['views'] = $article['views'] + 1; // อัปเดตยอดวิวในข้อมูลที่ส่งกลับ
+    }
+
+    return $article;
 }
