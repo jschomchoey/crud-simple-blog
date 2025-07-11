@@ -1,5 +1,8 @@
 <?php
-include './query/q_news.php';
+include_once(__DIR__ . '/_config.php');
+include_once(_DB_ . '/db.php');
+include_once(_QUERY_ . '/q_news.php');
+
 
 $category_filter = isset($_GET['category']) ? $_GET['category'] : '';
 $search_filter = isset($_GET['search']) ? $_GET['search'] : '';
@@ -12,6 +15,7 @@ $offset = ($page - 1) * $limit;
 function getNewsWithPagination($category_filter = '', $search_filter = '', $limit = 5, $offset = 0, $sort = 'date_desc')
 {
     global $mysqli;
+    // print_r($mysqli);
 
     $query = "SELECT news.*, categories.name AS category_name FROM news JOIN categories ON news.category_id = categories.id WHERE news.status = 'active'";
 
@@ -64,7 +68,6 @@ function getNewsWithPagination($category_filter = '', $search_filter = '', $limi
     $params[] = $limit;
     $params[] = $offset;
     $types .= 'ii';
-
     $stmt = $mysqli->prepare($query);
 
     // Bind parameters if any
@@ -532,7 +535,7 @@ $totalPages = ceil($totalNews / $limit);
 
             $.ajax({
                 type: 'POST',
-                url: 'ajax_get_news.php',
+                url: './api/ajax_get_news.php',
                 cache: false,
                 contentType: false,
                 processData: false,

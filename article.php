@@ -1,5 +1,8 @@
 <?php
-include './query/q_news.php';
+// include './query/q_news.php';
+include_once(__DIR__ . '/_config.php');
+include_once(_DB_ . '/db.php');
+include_once(_QUERY_ . '/q_news.php');
 
 // ตรวจสอบ slug ที่ส่งมา
 if (!isset($_GET['slug']) || empty($_GET['slug'])) {
@@ -87,6 +90,7 @@ $relatedNews = getRelatedNews($article['category_id'], $article['id']);
             padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.9rem;
+            font-weight: 400;
         }
 
         .views-count {

@@ -1,6 +1,9 @@
 <?php
 header('Content-Type: application/json');
-include './query/q_news.php';
+// include './query/q_news.php';
+include_once(__DIR__ . '/_config.php');
+include_once(_DB_ . '/db.php');
+include_once(_QUERY_ . '/q_news.php');
 
 try {
     $action = isset($_POST['action']) ? $_POST['action'] : '';

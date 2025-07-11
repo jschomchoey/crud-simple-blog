@@ -1,5 +1,8 @@
 <?php
-include './query/q_news.php';
+// include './query/q_news.php';
+include_once(__DIR__ . '/_config.php');
+include_once(_DB_ . '/db.php');
+include_once(_QUERY_ . '/q_news.php');
 
 // ตรวจสอบ ID ที่ส่งมา
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {

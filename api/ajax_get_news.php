@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
-include './query/q_news.php';
+include_once(__DIR__ . '/../_config.php');
+include_once(_DB_ . '/db.php');
+include _QUERY_ . '/q_news.php';
 
 try {
     // รับข้อมูลจาก POST

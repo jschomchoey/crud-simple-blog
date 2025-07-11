@@ -5,6 +5,7 @@ $password = 'root';
 $dbname = 'crud_blog';
 
 // creat connection
+// global $mysqli;
 $mysqli = new mysqli($host, $username, $password, $dbname);
 
 if ($mysqli->connect_error) {

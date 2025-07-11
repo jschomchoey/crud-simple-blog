@@ -1,5 +1,9 @@
 <?php
-include 'includes/db.php';
+// include '../includes/db.php';
+
+// include_once(__DIR__ . '/../_config.php');
+// include _QUERY_ . '/q_news.php';
+// include_once(_DB_ . '/db.php');
 
 // get news from database with filtering
 function getNews($category_filter = '', $search_filter = '')
